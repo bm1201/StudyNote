@@ -1,8 +1,5 @@
 import React from "react";
-import { useEffect, useRef, useState} from "react";
-import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import { MSG } from '@/resources/js/message';
-import "./NaverMapContainer.css";
+import { useEffect, useRef} from "react";
 import nodeAdd from '../../../public/images/node_add.png';
 import nodeEdit from '../../../public/images/node_edit.png';
 import nodeNom from '../../../public/images/node_nom.png';
@@ -25,12 +22,7 @@ const NaverMapContainer = (props) => {
 
     //네이버지도
     const map = useRef(null);
-
-    //마커관련 변수
-    const markerArray = useRef([]); //지도 위의 표출마커
-    const selectMarker = useRef(null); //선택마커 관리
-    const insertMarker = useRef(null); //추가마커 관리
-    const editMarker = useRef(null);   //편집마커 관리
+    const drawingManager = useRef(null);
 
     //네이버지도
     useEffect(() => {
@@ -47,7 +39,15 @@ const NaverMapContainer = (props) => {
             // mapTypeControl: true
             }
         )
+
+        drawingManager.current = new navermaps.drawing.DrawingManager({map: map.current});
     }, []);
+
+    //마커관련 변수
+    const markerArray = useRef([]); //지도 위의 표출마커
+    const selectMarker = useRef(null); //선택마커 관리
+    const insertMarker = useRef(null); //추가마커 관리
+    const editMarker = useRef(null);   //편집마커 관리
 
     // 마커 표출 관련 Effect
     useEffect(() => {
@@ -59,8 +59,6 @@ const NaverMapContainer = (props) => {
                 }
             }
 
-            map.current.setZoom(props.mapConf.mapZoomSize);
-            
             // 마커 관련 데이터 세팅
             const markerDatalist = props.mapConf.fnMarker.data;
             const markerKey = props.mapConf.fnMarker.key;
@@ -106,7 +104,7 @@ const NaverMapContainer = (props) => {
                 const markerKey = props.mapConf.fnMarker.key;
                 
                 map.current.setCenter(new navermaps.LatLng(markerEvtData[props.mapConf.fnMarker.coord.lat], markerEvtData[props.mapConf.fnMarker.coord.lon]));
-                map.current.setZoom(14);
+                map.current.setZoom(14);//원하는 지도크기 지정
 
                 for(let i=0, n=markerArray.current.length; i<n ;i++){
                     if(markerArray.current[i][markerKey] === markerEvtData[markerKey]){
@@ -180,6 +178,110 @@ const NaverMapContainer = (props) => {
             }
         }
     }, [props.mapConf.fnMarkerEvt?.type, props.mapConf.fnMarkerEvt?.data]);
+
+
+    const polyLineArray = useRef([]);    //지도 위의 표출 폴리라인
+    const selectPolyLine = useRef(null); //선택 폴리라인 관리
+
+    // 폴리라인 표출 관련 Effect
+    useEffect(() => {
+        if(props.mapConf.fnPolyLine?.data.length > 0){
+            // 지도 위의 마커 초기화
+            if(polyLineArray.current.length != 0){
+                for(let i=0, n=polyLineArray.current.length; i<n; i++){
+                    polyLineArray.current[i].setMap(null);
+                }
+            }
+
+            // 폴리라인 관련 데이터 세팅
+            const polyLineDatalist = props.mapConf.fnPolyLine.data;
+            const polyLineKey = props.mapConf.fnPolyLine.key;
+            const polyLineCoord = props.mapConf.fnPolyLine.vtx
+
+            let polyLineArr = [];
+            
+            for(let i=0, n=polyLineDatalist.length; i<n; i++){
+                // 폴리라인 표출
+                const polyline = new navermaps.Polyline({
+                    path: polyLineDatalist[i][polyLineCoord],
+                    strokeWeight: 5,             //선 두께
+                    strokeColor: '#808080',
+                    strokeOpacity: 0.9,          //선 불투명도
+                    strokeLineCap: 'round',      // 선 마감 스타일
+                    strokeLineJoin: 'round',     // 선들이 맞닿는 부분의 마감 스타일
+                });
+
+                polyline[polyLineKey] = polyLineDatalist[i][polyLineKey];
+                polyline.setMap(map.current);
+
+                polyLineArr.push(polyline);
+            }
+
+            polyLineArray.current = polyLineArr;
+        }
+    }, [props.mapConf.fnPolyLine?.data]);
+
+    // 폴리라인 이벤트 관련 Effect
+    useEffect(() => {
+        if(props.mapConf.fnPolyLineEvt?.type !== null){
+            const polyLineEvtType = props.mapConf.fnPolyLineEvt?.type;
+            const polyLineEvtData = props.mapConf.fnPolyLineEvt?.data;
+            const polyLineKey = props.mapConf.fnPolyLine?.key;
+
+            if(polyLineEvtType === "SELECT"){
+                //선택폴리라인 있는 경우 초기화
+                if(selectPolyLine.current !== null){
+                    selectPolyLine.current.setMap(null);
+                }
+                selectPolyLine.current = null;
+
+                map.current.setCenter(new navermaps.LatLng(polyLineEvtData[props.mapConf.fnPolyLine.vtx][0]));
+                map.current.setZoom(props.mapConf.mapZoomSize);//원하는 지도크기 지정
+
+                //폴리라인
+                const polyline = new navermaps.Polyline({
+                    path: polyLineEvtData[props.mapConf.fnPolyLine.vtx],
+                    strokeWeight: 5,             //선 두께
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.9,          //선 불투명도
+                    strokeLineCap: 'round',      // 선 마감 스타일
+                    strokeLineJoin: 'round',     // 선들이 맞닿는 부분의 마감 스타일
+                    zIndex : 100
+                });
+
+                polyline[polyLineKey] = polyLineEvtData[polyLineKey];
+                polyline.setMap(map.current);// 지도에 추가
+
+                selectPolyLine.current = polyline;
+            }
+
+            if(polyLineEvtType === "EDIT"){
+                drawingManager.current.addDrawing(selectPolyLine.current, navermaps.drawing.DrawingMode.POLYLINE, selectPolyLine.current[polyLineKey]);
+                
+                navermaps.Event.addListener(map.current, 'mousemove', function (e) {
+                    //수정된 폴리라인 관련하여 추가처리 필요시 로직 추가
+                    // const key = Object.keys(drawingManager.current.getDrawings())[0];
+                    // const drawingData = drawingManager.current.getDrawings()[key];
+                });
+            }
+
+            if(polyLineEvtType === "CANCEL"){
+                //선택폴리라인 있는 경우 초기화
+                if(selectPolyLine.current !== null){
+                    selectPolyLine.current.setMap(null);
+                    selectPolyLine.current = null;
+                    // 맵이벤트 삭제
+                    navermaps.Event.clearListeners(map.current, "mousemove");
+                }
+
+                //편집기 안에 있는 객체 제거
+                const keyArr = Object.keys(drawingManager.current.getDrawings());
+                for(let i=0, n=keyArr.length; i<n; i++){
+                    drawingManager.current.removeDrawing(keyArr[i]);
+                }
+            }
+        }
+    }, [props.mapConf.fnPolyLineEvt?.type, props.mapConf.fnPolyLineEvt?.data]);
 
     /******************** 공통기능 ********************/
     // 지도 줌 크기 재조절 함수
