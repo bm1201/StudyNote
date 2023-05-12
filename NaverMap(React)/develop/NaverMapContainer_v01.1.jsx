@@ -151,7 +151,7 @@ const NaverMapContainer = (props) => {
                 });
             }
 
-            if(markerEvtType === "CANCEL" || markerEvtType === "RELOAD"){
+            if(markerEvtType === "CANCEL" || markerEvtType === "SEARCH"){
                 //추가마커 있는 경우 초기화
                 if(insertMarker.current !== null){
                     insertMarker.current.setMap(null);
