@@ -1,7 +1,3 @@
 1. **DMZ 서버**
     
-    외부 네트워크와 내부 네트워크 사이에서 외부 네트워크 서비스를 제공하면서 내부 네트워크를 보호하는 서브넷으로 외부에 오픈된 서버영역
-    
-    ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a3e4db85-5046-482f-a1b8-6d0153e361ef/Untitled.png)
-    
-    내/외부 네트워크는 DMZ에 접속할 수 있지만,  DMZ내의 컴퓨터는 오직 외부 네트워크에만 연결할 수 있다.  이는DMZ 내의 호스트의 침입으로부터 내부 네트워크를 보호하기 위한 것이다.
+    https://lucky-addition-e20.notion.site/DMZ-5742f2e1d51744da84f672342ff625eb?pvs=4
