@@ -5,10 +5,11 @@ import com.intellij.database.util.DasUtil
 import javax.swing.*
 
 /*
-* Available context bindings:
-*   SELECTION   Iterable<DasObject>
-*   PROJECT     project
-*   FILES       files helper
+* Available Function:
+* 1. 파일 Directory명으로 PackageName 생성 및 선언
+* 2. 파일명은 입력한 파일명
+* 3. DB테이블의 모든 컬럼 DTO 생성
+* 4. String의 경우 @Size 어노테이션 추가
 */
 
 def input(InputText) {
@@ -18,7 +19,7 @@ def input(InputText) {
     return answer
 }
 
-fileNm = input("File명을 입력하세요.")
+fileNm = input("파일명을 입력하세요.")
 
 if (fileNm != null && fileNm != "") {
     FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
