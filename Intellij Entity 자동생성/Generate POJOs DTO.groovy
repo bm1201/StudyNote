@@ -10,6 +10,7 @@ import javax.swing.*
 * 2. 파일명은 입력한 파일명
 * 3. DB테이블의 모든 컬럼 DTO 생성
 * 4. String의 경우 @Size 어노테이션 추가
+* 5. NotNull 체크 되어 있는경우 @NotNull 어노테이션추가
 */
 
 def input(InputText) {
@@ -30,9 +31,6 @@ if (fileNm != null && fileNm != "") {
 def generate(table, dir) {
     //테이블이름
     def tableName = table.getName()
-
-//    //java 클래스이름
-//    def className = javaName(tableName, true)
 
     //필드명
     def fields = calcFields(table)
@@ -72,6 +70,9 @@ def generate(out, tableName, fields, dir) {
         if (it.comment != "" && it.comment != null) {
             out.println "    @ApiModelProperty(value=\"${it.comment} / ${it.oriType}\", example = \"\")"
         }
+        if (it.isNotNull){
+            out.println "    @NotNull"
+        }
         if (it.size != "" && it.size != null){
             out.println "    ${it.size}"
         }
@@ -91,27 +92,6 @@ def setPackageNm(dir, fileNm) {
 
     return name;
 }
-
-////클래스명 생성함수
-//def javaName(tableName, flag) {
-//    def s = tableName.tokenize("_")
-//
-//    //클래스명 생성
-//    if(s.size() == 1){
-//        s[0].toLowerCase()
-//    }else{
-//        def name = ""
-//        for(int i=0; i<s.size(); i++){
-//            if(i == 0){
-//                name = name + s[i]
-//            }else{
-//                name = name + s[i].toLowerCase().capitalize()
-//            }
-//        }
-//
-//        return name
-//    }
-//}
 
 //컬럼명 생성함수
 def setColumnNm(columnName) {
@@ -140,6 +120,7 @@ def calcFields(table) {
                            type : typeStr,
                            size : size,
                            comment : col.getComment(),
+                           isNotNull : col.isNotNull()
                    ]]
     }
 }
