@@ -22,7 +22,7 @@ typeMapping = [
 ]
 
 //Key설정
-def input(InputText) {
+def input(InputText){
     JFrame jframe = new JFrame()
     def answer = JOptionPane.showInputDialog(InputText)
     jframe.dispose()
@@ -30,16 +30,15 @@ def input(InputText) {
 }
 
 primaryKey = input("Key컬럼을 입력하세요. \n" +
-        "데이터 작성법 : USER_ID -> userId \n" +
-        "단일키의 경우 : userId \n" +
-        "복합키의 경우 : userId, occurId")
+                   "데이터 작성법 : USER_ID -> userId \n" +
+                   "단일키의 경우 : userId \n" +
+                   "복합키의 경우 : userId, occurId")
 
-if (primaryKey != null && primaryKey != "") {
+if(primaryKey != null && primaryKey != ""){
     FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
         SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
     }
 }
-
 
 def generate(table, dir) {
     //테이블이름
@@ -68,7 +67,7 @@ def generate(out, tableName, className, fields, dir) {
     out.println ""
     out.println "import lombok.*;"
     out.println "import java.io.Serializable;"
-    out.println "import kr.co.neighbor21.gunsan_os_api.common.annotation.SearchField;"
+    out.println "import kr.co.neighbor21.NeighborAPI.common.annotation.SearchField;"
     out.println ""
     out.println "import javax.persistence.*;"
     out.println "import java.util.*;"
@@ -76,8 +75,8 @@ def generate(out, tableName, className, fields, dir) {
     out.println "/**"
     out.println " * @Description : "
     out.println " * @Modification Information"
-    out.println " *                 수정일     수정자               수정내용"
-    out.println " *               --------------------------------------------------"
+    out.println " *                  수정일     수정자               수정내용"
+    out.println " *               ---------- --------- -------------------------------"
     out.println " *"
     out.println " *"
     out.println " * @author"
@@ -87,23 +86,29 @@ def generate(out, tableName, className, fields, dir) {
     out.println "@Setter"
     out.println "@Getter"
     out.println "@Entity"
-    out.println "@ToString //TODO : delete"
     out.println "@Table(name = \"$tableName\")"
-    out.println "public class $tableName" + " {"
-    out.println ""
+    out.println "public class $tableName" + " implements Serializable {"
+    out.println "    private static final long serialVersionUID = 1L;"
     out.println "    @EmbeddedId"
-    out.println "    @SearchField(columnName = {\"$SearchFieldKey\"})"
+    out.print "@SearchField(columnName = { "
+    for(int i=0; i<SearchFieldKey.size(); i++){
+        if(i == SearchFieldKey.size() - 1){
+            out.print "\"${SearchFieldKey.get(i)}\""
+        }else{
+            out.print "\"${SearchFieldKey.get(i)}\""
+            out.print ", "
+        }
+    }
+    out.println " })"
     out.println "    private ${tableName}_KEY key;"
+    out.println ""
     fields.each() {
-        if (!primaryKey.contains(it.name)) {
+        if(!primaryKey.contains(it.name)){
             if (it.comment != "" && it.comment != null) {
                 out.println "    /*${it.comment}*/"
             }
             out.println "    @Column(name = \"${it.oriName}\")"
             out.println "    @SearchField(columnName = \"${it.name}\")"
-            if (it.type.equals("Date")) {
-                out.println "    @Temporal(TemporalType.TIMESTAMP)"
-            }
             out.println "    private ${it.type} ${it.name};"
             out.println ""
         }
@@ -128,7 +133,7 @@ def generateKey(out, tableName, className, fields, dir) {
     out.println " * @Description : "
     out.println " * @Modification Information"
     out.println " *                  수정일     수정자               수정내용"
-    out.println " *               --------------------------------------------------"
+    out.println " *               ---------- --------- -------------------------------"
     out.println " *"
     out.println " *"
     out.println " * @author"
@@ -143,8 +148,7 @@ def generateKey(out, tableName, className, fields, dir) {
     out.println "    private static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (primaryKey.contains(it.name)) {
-            //notNull이 아닌경우만
+        if(primaryKey.contains(it.name)){
             if (it.comment != "" && it.comment != null) {
                 out.println "    /*${it.comment}*/"
             }
@@ -171,17 +175,17 @@ def setPackageNm(dir, className) {
 def javaName(tableName, flag) {
     def s = tableName.tokenize("_")
     //클래스명 생성
-    s.size() == 1 ? s[0].toLowerCase().capitalize() : s[s.size() - 1].toLowerCase().capitalize()
+    s.size() == 1 ? s[0].toLowerCase().capitalize() : s[s.size()-1].toLowerCase().capitalize()
 }
 
 //컬럼명 생성함수
 def setColumnNm(columnName) {
     def s = columnName.tokenize("_")
     def name = ''
-    for (int i = 0; i < s.size(); i++) {
-        if (i == 0) {
+    for(int i=0; i<s.size(); i++) {
+        if(i == 0){
             name = name + s[i].toLowerCase()
-        } else {
+        }else {
             name = name + s[i].toLowerCase().capitalize()
         }
     }
@@ -194,10 +198,10 @@ def calcFields(table) {
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           name   : setColumnNm(col.getName()),
-                           oriName: col.getName(),
-                           type   : typeStr,
-                           comment: col.getComment(),
+                       name : setColumnNm(col.getName()),
+                       oriName : col.getName(),
+                       type : typeStr,
+                       comment : col.getComment(),
                    ]]
     }
 }
@@ -205,14 +209,10 @@ def calcFields(table) {
 //key SearchField 명
 def setSearchFieldKey(primaryKey) {
     def s = primaryKey.tokenize(",")
-    def SearchFieldKey = ""
+    def SearchFieldKey = []
 
-    for (int i = 0; i < s.size(); i++) {
-        if (i == s.size() - 1) {
-            SearchFieldKey = SearchFieldKey + "key." + s[i].trim()
-        } else {
-            SearchFieldKey = SearchFieldKey + "key." + s[i].trim() + ", "
-        }
+    for(int i=0; i<s.size(); i++){
+        SearchFieldKey.push("key.${s[i].trim()}")
     }
 
     return SearchFieldKey
