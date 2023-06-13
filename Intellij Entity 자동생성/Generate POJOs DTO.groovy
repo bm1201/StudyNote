@@ -64,11 +64,12 @@ def generate(out, tableName, fields, dir) {
     out.println " */"
     out.println "@Setter"
     out.println "@Getter"
-    out.println "@ApiModel(value=\"${fileNm} - \")"
+    out.println "@ApiModel(value = \"${fileNm} - \")"
     out.println "public class ${fileNm}" + " {"
+    out.println ""
     fields.each() {
         if (it.comment != "" && it.comment != null) {
-            out.println "    @ApiModelProperty(value=\"${it.comment} / ${it.oriType}\", example = \"\")"
+            out.println "    @ApiModelProperty(value = \"${it.comment} / ${it.oriType}\", example = \"\")"
         }
         if (it.isNotNull){
             out.println "    @NotNull"
