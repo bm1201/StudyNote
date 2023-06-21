@@ -4,12 +4,16 @@ import com.intellij.database.util.DasUtil
 
 import javax.swing.*
 
-/*
-* Available context bindings:
-*   SELECTION   Iterable<DasObject>
-*   PROJECT     project
-*   FILES       files helper
-*/
+/**
+ * @Description : Entity 자동생성
+ * @Modification Information
+ *                  수정일     수정자               수정내용
+ *               ---------- --------- -------------------------------
+ *
+ * @author ByungMin
+ * @version 1.0.0
+ * @since 2023-06-20
+ */
 
 //컬럼 타입 매핑 설정
 typeMapping = [
@@ -48,12 +52,16 @@ def generate(table, dir) {
 
     //필드명
     def fields = calcFields(table)
-
+    
     //Entity생성
     new File(dir, tableName + ".java").withPrintWriter { out -> generate(out, tableName, className, fields, dir) }
 
-    //KeyEntity생성
-    new File(dir, tableName + "_KEY.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
+    def primaryKeyToken = primaryKey.tokenize(",")
+
+    if(primaryKeyToken.size() > 1){
+        //KeyEntity생성
+        new File(dir, tableName + "_KEY.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
+    }
 }
 
 //Entity 생성 설정
@@ -62,6 +70,8 @@ def generate(out, tableName, className, fields, dir) {
     def packageName = setPackageNm(dir, className)
     //key SearchField
     def SearchFieldKey = setSearchFieldKey(primaryKey)
+
+    def primaryKeyToken = primaryKey.tokenize(",")
 
     out.println "package $packageName;"
     out.println ""
@@ -88,31 +98,56 @@ def generate(out, tableName, className, fields, dir) {
     out.println "@Entity"
     out.println "@Table(name = \"$tableName\")"
     out.println "public class $tableName {"
-    out.println "    @EmbeddedId"
-    out.print "    @SearchField(columnName = { "
-    for(int i=0; i<SearchFieldKey.size(); i++){
-        if(i == SearchFieldKey.size() - 1){
-            out.print "\"${SearchFieldKey.get(i)}\""
-        }else{
-            out.print "\"${SearchFieldKey.get(i)}\""
-            out.print ", "
-        }
-    }
-    out.println " })"
-    out.println "    private ${tableName}_KEY key;"
-    out.println ""
-    fields.each() {
-        if(!primaryKey.contains(it.name)){
-            if (it.comment != "" && it.comment != null) {
-                out.println "    /*${it.comment}*/"
+    if(primaryKeyToken.size() > 1){
+        out.println "    @EmbeddedId"
+        out.print "    @SearchField(columnName = { "
+        for(int i=0; i<SearchFieldKey.size(); i++){
+            if(i == SearchFieldKey.size() - 1){
+                out.print "\"${SearchFieldKey.get(i)}\""
+            }else{
+                out.print "\"${SearchFieldKey.get(i)}\""
+                out.print ", "
             }
-            out.println "    @Column(name = \"${it.oriName}\")"
-            out.println "    @SearchField(columnName = \"${it.name}\")"
-            out.println "    private ${it.type} ${it.name};"
-            out.println ""
         }
+        out.println " })"
+        out.println "    private ${tableName}_KEY key;"
+        out.println ""
+        fields.each() {
+            if(!primaryKey.contains(it.name)){
+                if (it.comment != "" && it.comment != null) {
+                    out.println "    /* ${it.comment} */"
+                }
+                out.println "    @Column(name = \"${it.oriName}\")"
+                out.println "    @SearchField(columnName = \"${it.name}\")"
+                out.println "    private ${it.type} ${it.name};"
+                out.println ""
+            }
+        }
+        out.println "}"
+    }else{
+        out.println ""
+        fields.each() {
+            if(primaryKeyToken.contains(it.name)){
+                if (it.comment != "" && it.comment != null) {
+                    out.println "    /* ${it.comment} */"
+                }
+                out.println "    @Id"
+                out.println "    @Column(name = \"${it.oriName}\")"
+                out.println "    @SearchField(columnName = \"${it.name}\")"
+                out.println "    private ${it.type} ${it.name};"
+                out.println ""
+            }else{
+                if (it.comment != "" && it.comment != null) {
+                    out.println "    /* ${it.comment} */"
+                }
+                out.println "    @Column(name = \"${it.oriName}\")"
+                out.println "    @SearchField(columnName = \"${it.name}\")"
+                out.println "    private ${it.type} ${it.name};"
+                out.println ""
+            }
+        }
+        out.println "}"
     }
-    out.println "}"
 }
 
 //KeyEntity 생성 설정
@@ -149,7 +184,7 @@ def generateKey(out, tableName, className, fields, dir) {
     fields.each() {
         if(primaryKey.contains(it.name)){
             if (it.comment != "" && it.comment != null) {
-                out.println "    /*${it.comment}*/"
+                out.println "    /* ${it.comment} */"
             }
             out.println "    @Column(name = \"${it.oriName}\")"
             out.println "    private ${it.type} ${it.name};"
