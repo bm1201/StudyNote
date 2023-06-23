@@ -5,7 +5,7 @@ import com.intellij.database.util.DasUtil
 import javax.swing.*
 
 /**
- * @Description : DTO 자동생성
+ * @Description : DTO, Repository 전체 자동생성
  * @Modification Information
  *                  수정일     수정자               수정내용
  *               ----------  ---------  -------------------------------
@@ -19,26 +19,17 @@ import javax.swing.*
 
 /**
  * Available Function:
- * 1. 파일 Directory명으로 PackageName 생성 및 선언
- * 2. 파일명은 입력한 파일명
- * 3. DB테이블의 모든 컬럼 DTO 생성
- * 4. String의 경우 @Size 어노테이션 추가
- * 5. NotNull 체크 되어 있는경우 @NotNull 어노테이션추가
+ * 1. 테이블 CamelCase로 변경 후 depth만큼 디렉토리 생성
+ * 2. 파일 Directory명으로 PackageName 생성 및 선언
+ * 3. 파일명은 테이블 CamelCase로 변경 후 DTO 추가 (ex) ay_a1_node -> AyA1NodeDTO)
+ * 4. DB테이블의 모든 컬럼 DTO 생성
+ * 5. String의 경우 @Size 어노테이션 추가
+ * 6. NotNull 체크 되어 있는경우 @NotNull 어노테이션추가
+ * 7. Repository 자동생성
  */
 
-def input(InputText) {
-    JFrame jframe = new JFrame()
-    def answer = JOptionPane.showInputDialog(InputText)
-    jframe.dispose()
-    return answer
-}
-
-fileNm = input("파일명을 입력하세요.")
-
-if (fileNm != null && fileNm != "") {
-    FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
-        SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
-    }
+FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
+    SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
 def generate(table, dir) {
@@ -48,14 +39,43 @@ def generate(table, dir) {
     //필드명
     def fields = calcFields(table)
 
-    //Entity생성
-    new File(dir, fileNm + ".java").withPrintWriter { out -> generate(out, tableName, fields, dir) }
+    //디렉토리 및 파일명 생성
+    def tableNmToken = tableName.tokenize("_");
+    def nowDir = dir.toString();
+    def fileNm = "";
+    def repositoryNm = "";
+
+    for(int i=0; i<tableNmToken.size(); i++){
+        //파일명
+        if(i == tableNmToken.size()-1){
+            fileNm = fileNm + tableNmToken[i] + "DTO";
+            repositoryNm = repositoryNm + tableNmToken[i] + "Repository";
+        }else{
+            fileNm = fileNm + tableNmToken[i].toLowerCase().capitalize();
+            repositoryNm = repositoryNm + tableNmToken[i].toLowerCase().capitalize();
+        }
+
+        //디렉토리
+        nowDir = nowDir + "\\" + tableNmToken[i];
+
+        File newFile = new File(nowDir);
+
+        if(!newFile.exists()){
+            newFile.mkdir();
+        }
+    }
+    
+    //DTO생성
+    new File(nowDir, fileNm + ".java").withPrintWriter { out -> generateDTO(out, tableName, fields, nowDir, fileNm) }
+
+    //Repository생성
+    new File(nowDir, repositoryNm + ".java").withPrintWriter { out -> generateRepository(out, tableName, fields, nowDir, repositoryNm) }
 }
 
-//DTO 생성 설정
-def generate(out, tableName, fields, dir) {
+//Repository 생성 설정
+def generateDTO(out, tableName, fields, nowDir, fileNm) {
     //패키지명
-    def packageName = setPackageNm(dir)
+    def packageName = setPackageNm(nowDir)
 
     out.println "package $packageName;"
     out.println ""
@@ -97,9 +117,40 @@ def generate(out, tableName, fields, dir) {
     out.println "}"
 }
 
+//DTO 생성 설정
+def generateRepository(out, tableName, fields, nowDir, repositoryNm) {
+    //패키지명
+    def packageName = setPackageNm(nowDir)
+
+    out.println "package $packageName;"
+    out.println ""
+    out.println "import org.springframework.data.jpa.repository.JpaRepository;"
+    out.println "import org.springframework.data.jpa.repository.JpaSpecificationExecutor;"
+    out.println "import org.springframework.stereotype.Repository;"
+
+    out.println "import kr.co.neighbor21.anyang_ad_api.entity.$tableName;"
+    out.println "import kr.co.neighbor21.anyang_ad_api.entity.${tableName}_key;"
+    out.println ""
+    out.println "/**"
+    out.println " * @Description : "
+    out.println " * @Modification Information"
+    out.println " *                  수정일     수정자               수정내용"
+    out.println " *               ---------- --------- -------------------------------"
+    out.println " *"
+    out.println " *"
+    out.println " * @author"
+    out.println " * @version 1.0.0"
+    out.println " * @since"
+    out.println " */"
+    out.println "@Repository"
+    out.println "public interface $repositoryNm extends JpaRepository<$tableName, ${tableName}_key>, JpaSpecificationExecutor<$tableName> {"
+    out.println ""
+    out.println "}"
+}
+
 //패키지 이름생성 생성함수
-def setPackageNm(dir) {
-    String s = dir
+def setPackageNm(nowDir) {
+    String s = nowDir
 
     String name = s.substring(s.indexOf("java\\") + 5)
 
@@ -158,11 +209,10 @@ def setType(oriType) {
             //숫자
             typeStr = "Double"
             return typeStr
+        }else{
+            typeStr = "String"
+            return typeStr
         }
-    }else{
-        //날짜
-        typeStr = "String"
-        return typeStr
     }
 }
 

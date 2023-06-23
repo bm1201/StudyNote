@@ -78,7 +78,7 @@ def generate(table, dir) {
 //Entity 생성 설정
 def generate(out, tableName, className, fields, dir) {
     //패키지명
-    def packageName = setPackageNm(dir, className)
+    def packageName = setPackageNm(dir)
     //key SearchField
     def SearchFieldKey = setSearchFieldKey(primaryKey)
 
@@ -164,7 +164,7 @@ def generate(out, tableName, className, fields, dir) {
 
 //KeyEntity 생성 설정
 def generateKey(out, tableName, className, fields, dir) {
-    def packageName = setPackageNm(dir, className)
+    def packageName = setPackageNm(dir)
 
     out.println "package $packageName;"
     out.println ""
@@ -212,7 +212,7 @@ def generateKey(out, tableName, className, fields, dir) {
 }
 
 //패키지 이름생성 생성함수
-def setPackageNm(dir, className) {
+def setPackageNm(dir) {
     String s = dir
 
     String name = s.substring(s.indexOf("java\\") + 5)
