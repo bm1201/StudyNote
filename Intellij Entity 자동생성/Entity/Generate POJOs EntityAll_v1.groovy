@@ -7,9 +7,9 @@ import javax.swing.*
 /**
  * @Description : Entity 전체 자동생성
  * @Modification Information
- *                  수정일     수정자               수정내용
+ *                  수정일    수정자               수정내용
  *               ---------- --------- -------------------------------
- *
+ *              2023.06.23  ByungMin  postgres 데이터 타입도 처리할 수 있도록 typeMapping 수정
  * @author ByungMin
  * @version 1.0.0
  * @since 2023-06-23
@@ -21,37 +21,21 @@ import javax.swing.*
  * 2. Entity명은 DB 테이블 명
  * 3. KeyEntity명은 DB 테이블 명 + "_KEY"
  * 4. Lombok 형태로 테이블 컬럼 표출
- * 5. 입력한 KEY에 따라서 Entity, KeyEntity에 컬럼 표출
- * 6. 입력한 KEY에 따라서 SearchField 자동생성
-*/
+ * 5. SearchField 자동생성
+ */
 
 //컬럼 타입 매핑 설정
 typeMapping = [
-        (~/(?i)int/)                      : "long",
-        (~/(?i)float|double|decimal|real/): "double",
-        (~/(?i)datetime|timestamp/)       : "Timestamp",
-        (~/(?i)date/)                     : "Date",
-        (~/(?i)time/)                     : "Time",
-        (~/(?i)/)                         : "String"
+        (~/(?i)int/)                               : "long",
+        (~/(?i)float|double|decimal|real|numeric/) : "double",
+        (~/(?i)datetime|timestamp/)                : "Timestamp",
+        (~/(?i)date/)                              : "Date",
+        (~/(?i)time/)                              : "Time",
+        (~/(?i)/)                                  : "String"
 ]
 
-//Key설정
-def input(InputText){
-    JFrame jframe = new JFrame()
-    def answer = JOptionPane.showInputDialog(InputText)
-    jframe.dispose()
-    return answer
-}
-
-primaryKey = input("Key컬럼을 입력하세요. \n" +
-        "데이터 작성법 : USER_ID -> userId \n" +
-        "단일키의 경우 : userId \n" +
-        "복합키의 경우 : userId, occurId")
-
-if(primaryKey != null && primaryKey != ""){
-    FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
-        SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
-    }
+FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
+    SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
 def generate(table, dir) {
@@ -62,26 +46,18 @@ def generate(table, dir) {
 
     //필드명
     def fields = calcFields(table)
-    
+
     //Entity생성
     new File(dir, tableName + ".java").withPrintWriter { out -> generate(out, tableName, className, fields, dir) }
 
-    def primaryKeyToken = primaryKey.tokenize(",")
-
-    if(primaryKeyToken.size() > 1){
-        //KeyEntity생성
-        new File(dir, tableName + "_KEY.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
-    }
+    //KeyEntity생성
+    new File(dir, tableName + "_KEY.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
 }
 
 //Entity 생성 설정
 def generate(out, tableName, className, fields, dir) {
     //패키지명
     def packageName = setPackageNm(dir, className)
-    //key SearchField
-    def SearchFieldKey = setSearchFieldKey(primaryKey)
-
-    def primaryKeyToken = primaryKey.tokenize(",")
 
     out.println "package $packageName;"
     out.println ""
@@ -108,56 +84,21 @@ def generate(out, tableName, className, fields, dir) {
     out.println "@Entity"
     out.println "@Table(name = \"$tableName\")"
     out.println "public class $tableName {"
-    if(primaryKeyToken.size() > 1){
-        out.println "    @EmbeddedId"
-        out.print "    @SearchField(columnName = { "
-        for(int i=0; i<SearchFieldKey.size(); i++){
-            if(i == SearchFieldKey.size() - 1){
-                out.print "\"${SearchFieldKey.get(i)}\""
-            }else{
-                out.print "\"${SearchFieldKey.get(i)}\""
-                out.print ", "
-            }
+    out.println "    @EmbeddedId"
+    out.print "    @SearchField(columnName = { key."
+    out.println " })"
+    out.println "    private ${tableName}_KEY key;"
+    out.println ""
+    fields.each() {
+        if (it.comment != "" && it.comment != null) {
+            out.println "    /* ${it.comment} */"
         }
-        out.println " })"
-        out.println "    private ${tableName}_KEY key;"
+        out.println "    @Column(name = \"${it.oriName}\")"
+        out.println "    @SearchField(columnName = \"${it.name}\")"
+        out.println "    private ${it.type} ${it.name};"
         out.println ""
-        fields.each() {
-            if(!primaryKey.contains(it.name)){
-                if (it.comment != "" && it.comment != null) {
-                    out.println "    /* ${it.comment} */"
-                }
-                out.println "    @Column(name = \"${it.oriName}\")"
-                out.println "    @SearchField(columnName = \"${it.name}\")"
-                out.println "    private ${it.type} ${it.name};"
-                out.println ""
-            }
-        }
-        out.println "}"
-    }else{
-        out.println ""
-        fields.each() {
-            if(primaryKeyToken.contains(it.name)){
-                if (it.comment != "" && it.comment != null) {
-                    out.println "    /* ${it.comment} */"
-                }
-                out.println "    @Id"
-                out.println "    @Column(name = \"${it.oriName}\")"
-                out.println "    @SearchField(columnName = \"${it.name}\")"
-                out.println "    private ${it.type} ${it.name};"
-                out.println ""
-            }else{
-                if (it.comment != "" && it.comment != null) {
-                    out.println "    /* ${it.comment} */"
-                }
-                out.println "    @Column(name = \"${it.oriName}\")"
-                out.println "    @SearchField(columnName = \"${it.name}\")"
-                out.println "    private ${it.type} ${it.name};"
-                out.println ""
-            }
-        }
-        out.println "}"
     }
+    out.println "}"
 }
 
 //KeyEntity 생성 설정
@@ -174,7 +115,6 @@ def generateKey(out, tableName, className, fields, dir) {
     out.println "import lombok.AllArgsConstructor;"
     out.println "import lombok.EqualsAndHashCode;"
     out.println "import lombok.NoArgsConstructor;"
-    out.println "import java.util.*;"
     out.println ""
     out.println "/**"
     out.println " * @Description : "
@@ -197,14 +137,12 @@ def generateKey(out, tableName, className, fields, dir) {
     out.println "    private static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if(primaryKey.contains(it.name)){
-            if (it.comment != "" && it.comment != null) {
-                out.println "    /* ${it.comment} */"
-            }
-            out.println "    @Column(name = \"${it.oriName}\")"
-            out.println "    private ${it.type} ${it.name};"
-            out.println ""
+        if (it.comment != "" && it.comment != null) {
+            out.println "    /* ${it.comment} */"
         }
+        out.println "    @Column(name = \"${it.oriName}\")"
+        out.println "    private ${it.type} ${it.name};"
+        out.println ""
     }
     out.println "}"
 }
@@ -253,16 +191,4 @@ def calcFields(table) {
                            comment : col.getComment(),
                    ]]
     }
-}
-
-//key SearchField 명
-def setSearchFieldKey(primaryKey) {
-    def s = primaryKey.tokenize(",")
-    def SearchFieldKey = []
-
-    for(int i=0; i<s.size(); i++){
-        SearchFieldKey.push("key.${s[i].trim()}")
-    }
-
-    return SearchFieldKey
 }
