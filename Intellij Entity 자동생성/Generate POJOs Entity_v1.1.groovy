@@ -5,15 +5,25 @@ import com.intellij.database.util.DasUtil
 import javax.swing.*
 
 /**
- * @Description : Entity 자동생성
+ * @Description : Entity 전체 자동생성
  * @Modification Information
  *                  수정일     수정자               수정내용
  *               ---------- --------- -------------------------------
  *
  * @author ByungMin
  * @version 1.0.0
- * @since 2023-06-20
+ * @since 2023-06-23
  */
+
+/**
+ * Available Function:
+ * 1. 파일 Directory명으로 PackageName 생성 및 선언
+ * 2. Entity명은 DB 테이블 명
+ * 3. KeyEntity명은 DB 테이블 명 + "_KEY"
+ * 4. Lombok 형태로 테이블 컬럼 표출
+ * 5. 입력한 KEY에 따라서 Entity, KeyEntity에 컬럼 표출
+ * 6. 입력한 KEY에 따라서 SearchField 자동생성
+*/
 
 //컬럼 타입 매핑 설정
 typeMapping = [
