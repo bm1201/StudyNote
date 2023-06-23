@@ -19,7 +19,7 @@ import javax.swing.*
  * Available Function:
  * 1. 파일 Directory명으로 PackageName 생성 및 선언
  * 2. Entity명은 DB 테이블 명
- * 3. KeyEntity명은 DB 테이블 명 + "_KEY"
+ * 3. KeyEntity명은 DB 테이블 명 + "_key"
  * 4. Lombok 형태로 테이블 컬럼 표출
  * 5. SearchField 자동생성
  */
@@ -51,7 +51,7 @@ def generate(table, dir) {
     new File(dir, tableName + ".java").withPrintWriter { out -> generate(out, tableName, className, fields, dir) }
 
     //KeyEntity생성
-    new File(dir, tableName + "_KEY.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
+    new File(dir, tableName + "_key.java").withPrintWriter { out -> generateKey(out, tableName, className, fields, dir) }
 }
 
 //Entity 생성 설정
@@ -87,7 +87,7 @@ def generate(out, tableName, className, fields, dir) {
     out.println "    @EmbeddedId"
     out.print "    @SearchField(columnName = { key."
     out.println " })"
-    out.println "    private ${tableName}_KEY key;"
+    out.println "    private ${tableName}_key key;"
     out.println ""
     fields.each() {
         if (it.comment != "" && it.comment != null) {
@@ -132,7 +132,7 @@ def generateKey(out, tableName, className, fields, dir) {
     out.println "@AllArgsConstructor"
     out.println "@NoArgsConstructor"
     out.println "@EqualsAndHashCode"
-    out.println "public class $tableName" + "_KEY implements Serializable {"
+    out.println "public class $tableName" + "_key implements Serializable {"
     out.println ""
     out.println "    private static final long serialVersionUID = 1L;"
     out.println ""
