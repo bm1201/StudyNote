@@ -10,6 +10,7 @@ import javax.swing.*
  *                  수정일    수정자               수정내용
  *               ---------- --------- -------------------------------
  *              2023.06.23  ByungMin  postgres 데이터 타입도 처리할 수 있도록 typeMapping 수정
+ *                                    lombok * 필요한 라이브러리만 가져오도록 수정
  * @author ByungMin
  * @version 1.0.0
  * @since 2023-06-23
@@ -85,7 +86,8 @@ def generate(out, tableName, className, fields, dir) {
 
     out.println "package $packageName;"
     out.println ""
-    out.println "import lombok.*;"
+    out.println "import lombok.Getter;"
+    out.println "import lombok.Setter;"
     out.println "import java.io.Serializable;"
     out.println "import kr.co.neighbor21.gunsan_os_api.common.annotation.SearchField;"
     out.println ""
