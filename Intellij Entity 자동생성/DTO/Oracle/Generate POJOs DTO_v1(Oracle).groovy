@@ -10,6 +10,7 @@ import javax.swing.*
  *                  수정일     수정자               수정내용
  *               ----------  ---------  -------------------------------
  *               2023.06.23  ByungMin  @Size -> @ByteSize 어노테이션 추가
+                                       lombok * 필요한 라이브러리만 가져오도록 수정
  * @author ByungMin
  * @version 1.0.0
  * @since 2023-06-23
@@ -57,7 +58,8 @@ def generate(out, tableName, fields, dir) {
 
     out.println "package $packageName;"
     out.println ""
-    out.println "import lombok.*;"
+    out.println "import lombok.Getter;"
+    out.println "import lombok.Setter;"
     out.println "import javax.validation.*;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
@@ -73,8 +75,8 @@ def generate(out, tableName, fields, dir) {
     out.println " * @version 1.0.0"
     out.println " * @since"
     out.println " */"
-    out.println "@Setter"
     out.println "@Getter"
+    out.println "@Setter"
     out.println "@ApiModel(value = \"${fileNm} - \")"
     out.println "public class ${fileNm}" + " {"
     out.println ""
