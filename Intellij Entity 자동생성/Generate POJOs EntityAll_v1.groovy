@@ -1,9 +1,6 @@
 import com.intellij.database.model.DasTable
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
-import lombok.AllArgsConstructor
-import lombok.EqualsAndHashCode
-import lombok.NoArgsConstructor
 
 import javax.swing.*
 
