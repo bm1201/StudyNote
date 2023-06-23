@@ -5,12 +5,13 @@ import com.intellij.database.util.DasUtil
 import javax.swing.*
 
 /**
- * @Description : Entity 전체 자동생성
+ * @Description : DTO 자동생성
  * @Modification Information
  *                  수정일     수정자               수정내용
  *               ----------  ---------  -------------------------------
- *               2023.06.23  ByungMin  @Size -> @ByteSize 어노테이션 추가
-                                       lombok * 필요한 라이브러리만 가져오도록 수정
+ *               2023.06.23  ByungMin   postgres 데이터 타입도 처리할 수 있도록 typeMapping 수정
+ *                                      @Size -> @ByteSize 어노테이션 추가
+ *                                      lombok * 필요한 라이브러리만 가져오도록 수정
  * @author ByungMin
  * @version 1.0.0
  * @since 2023-06-23
@@ -23,7 +24,7 @@ import javax.swing.*
  * 3. DB테이블의 모든 컬럼 DTO 생성
  * 4. String의 경우 @Size 어노테이션 추가
  * 5. NotNull 체크 되어 있는경우 @NotNull 어노테이션추가
-*/
+ */
 
 def input(InputText) {
     JFrame jframe = new JFrame()
@@ -141,14 +142,14 @@ def calcFields(table) {
 
 //필드 Type 설정 함수
 def setType(oriType) {
-    int s = oriType.indexOf("(")
-    def type = "CHAR, VARCHAR2, NCHAR, NVARCHAR"
-    def type2 = "NUMBER, FLOAT"
+    int s = oriType.indexOf("(") == -1 ? oriType.length() : oriType.indexOf("(");
+    def type = "CHAR, VARCHAR2, NCHAR, NVARCHAR, varchar, char, geometry"
+    def type2 = "NUMBER, FLOAT, numeric, int, int2, int4, int8, float4, float8"
     def typeStr = ""
 
     if(s !== -1){
         def typeNm = oriType.substring(0, s-1)
-        
+
         if(type.contains(typeNm)){
             //문자열
             typeStr = "String"
@@ -168,8 +169,8 @@ def setType(oriType) {
 //필드 MinMax 설정 함수
 def setSize(oriType) {
     int s = oriType.indexOf("(")
-    def type = "CHAR, VARCHAR2, NCHAR, NVARCHAR"
-    def type2 = "NUMBER, FLOAT"
+    def type = "CHAR, VARCHAR2, NCHAR, NVARCHAR, varchar, char"
+    def type2 = "NUMBER, FLOAT, numeric, int, int2, int4, int8, float4, float8"
     def size = ""
 
     if(s !== -1){
