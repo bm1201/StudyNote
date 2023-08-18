@@ -7,47 +7,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 
 /**
- * Entity 전체 자동생성<br />
- *
- * @author ByungMin
- * @since 2023-06-23 <br/>
- * @apiNote<br />
- * 2023-06-23 ByungMin postgres 데이터 타입도 처리할 수 있도록 typeMapping 수정 <br />
- *                     lombok * 필요한 라이브러리만 가져오도록 수정 <br />
- * 2023-06-29 ByungMin 프로젝트 정보 관련 수정 <br />
- *                     파일 상단 주석 형식 수정 <br />
- *                     Date 타입 LocalDateTime 으로 수정 <br />
- * 2023-06-30 ByungMin 따로 key입력 받지 않고 EmbbeddedId 무조건 표출하도록 수정<br/>
- * 2023-07-03 ByungMin 컬럼 타입 관련 수정 (Long, Double, LocalDateTimem, String) <br/>
- * 2023-07-10 ByungMin 테이블 코멘트 값이 있다면 파일 주석 부분에 자동으로 넣어주도록 수정 <br/>
- *                     키 값 자동으로 세팅하도록 수정 <br/>
- *                     엔티티 키 규칙 설정받아 해당 규칙에 맞게 키 생성하도록 수정 <br/>
- *                     키 값 없는 경우 인덱스로 설정된 컬럼을 키로 설정(둘 다 없으면 주석처리) <br/>
- * 2023-07-11 ByungMin Date 형식 타입, Blob 타입 @Converter 추가 <br/>
- * 2023-07-12 ByungMin PostgreSQL 자료형 타입 정리 <br/>
- *                     타입이 num으로 시작할 때 소수점 확인하여 Long, Double로 변환처리  <br/>
- *                     컬럼명에 따라 CreationTimestamp, UpdateTimestamp 어노테이션 자동 추가 처리  <br/>
- * 2023-07-13 ByungMin DefaultSort 키 값으로 자동 입력되도록 수정 <br/>
- *                     테이블에 key가 없을 때 처리 방법 선택하도록 수정 <br/>
- *                     날짜관련 필요한 클래스만 import 하도록 수정 <br/>
- *                     자동생성 세팅 정보 관련 수정 <br/>
- * 2023-07-14 ByungMin 필드명 CamelCase로 변경한 뒤, 두번째 글자가 대문자인 경우 매핑 오류나는 문제 해결(두번째 글자 소문자로 변경) (ex. L_LINKID => (lLinkid -> llinkId)) <br/>
- * 2023-07-20 ByungMin Postgresql의 경우 테이블이나 컬럼을 대문자로 생성하는 경우 매핑 오류나는 문제 해결(대문자의 경우 ""(쌍따옴표) 추가)<br/>
- *                     1. application.yml JPA 설정변경 필수<br/>
- *                     jpa:<br/>
- *                       hibernate:<br/>
- *                           ddl-auto: none<br/>
- *                           naming:<br/>
- *                               physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl<br/>
- *                     파일 내부에 수정 표시 있으면 해당파일 덮어쓰기 안하도록 처리<br/>
- *                     복합키의 경우 @Embeddable 추가<br/>
- * 2023-07-27 ByungMin 파일 상단 주석 수정이력 @apiNote로 변경 <br/>
- *                     키가 날짜타입인 경우 @SaveLocalDateTime 추가<br/>
- *                     키 클래스에 toString() 추가<br/>
- * 2023-07-28 ByungMin serialVersionUID 필드 빼고 @SuppressWarnings("serial") 추가 <br/>
- *                     엔티티 @Getter, @Setter를 @Data로 변경<br/>
- *                     엔티티 @Getter, @Setter를 @Data로 변경 취소<br/>
- * 2023-07-31 ByungMin pk가 없는 경우의 SaveLocalDateTime import 관련 수정 <br/>
+ * Entity 자동생성<br />
  */
 
 /**
@@ -56,26 +16,18 @@ import java.time.LocalDateTime
  * 2. Entity명은 DB 테이블 명
  * 3. KeyEntity명은 DB 테이블 명 + "_KEY"
  * 4. Lombok 형태로 테이블 컬럼 표출
- */
-
-/**
- * To do
- * 1. db별 컬럼 타입 정리
+ * 5. @CreationTimestamp, @UpdateTimestamp 설정값에 따라 자동작성
  */
 
 /**
  * How to use:
- * 1. PROJECT_NO 변경
- * 2. PROJECT_SETTING 정보 확인
- * + @CreationTimestamp 붙여줄 컬럼명 정보 확인
- * + @UpdateTimestamp 붙여줄 컬럼명 정보 확인
- *
- * + 프로젝트 정보 확인 - 적용할 프로젝트명으로 수정 (파일 import 자동 작성으로 필요)
- * + 엔티티 키 규칙 타입 확인 - 엔티티 키 규칙에 맞게 수정
- * + 타입 포맷 매핑 처리 정보 확인 - 타입 포맷 매핑 처리 방법에 맞게 수정
- * + db 정보 확인 - 개발하려는 db 정보에 맞게 수정
- * + 테이블에 key가 없을 때 처리 방법 확인
- * + 파일 덮어쓰기 처리 방법 확인
+ * 1. PROJECT_SETTING 정보 확인
+ * 2. @CreationTimestamp 붙여줄 컬럼명 정보 확인
+ * 3. @UpdateTimestamp 붙여줄 컬럼명 정보 확인
+ * 4. db 정보 확인 - 개발하려는 db 정보에 맞게 수정
+ * 5. 타입 포맷 매핑 처리 정보 확인 - 타입 포맷 매핑 처리 방법에 맞게 수정
+ * 6. 프로젝트 정보 확인 - 적용할 프로젝트명으로 수정 (파일 import 자동 작성할 때 사용)
+ * 7. 엔티티 키 규칙 타입 확인 - 엔티티 키 규칙에 맞게 수정
  */
 
 
@@ -194,19 +146,13 @@ def generate(table, dir) {
     }
 }
 
-//Entity 생성 설정
+//Entity 생성 설정(key가 1개이거나 없는 경우)
 def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields, fieldsInfo, dir) {
     //패키지명
     def packageName = setPackageNm(dir)
 
     out.println "package $packageName;"
     out.println ""
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.DefaultSort;"
-    if(fieldsInfo.importSaveLocalDateTime){  //날짜타입이면 @SaveLocalDateTime 추가
-        out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.SaveLocalDateTime;"
-    }
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.SearchField;"
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.enumClass.SortOrder;"
     out.println "import lombok.Getter;"
     out.println "import lombok.Setter;"
     if(fieldsInfo.importCreationTimestamp){
@@ -234,11 +180,6 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println "import java.time.LocalDateTime;"
     }
     out.println ""
-//    if(fieldsInfo.importConverter){
-//        out.println "import javax.persistence.Convert;"
-//        out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.converter.*;"
-//    }
-    out.println ""
     out.println "/**"
     if (tableComment != null) { //테이블 코멘트가 있으면 해당 코멘트로 주석 채워줌
         out.println " * [${tableComment}] Entity<br />"
@@ -246,7 +187,7 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println " * [] Entity<br />"
     }
     out.println " *"
-    out.println " * @author ByungMin"
+    out.println " * @author "
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
@@ -255,24 +196,9 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
     out.println "@Setter"
     out.println "@Entity"
     if(DB_INFO == 2){
-        //DB가 PostgreSQL
-//        if(Character.isUpperCase(tableName.charAt(0))){
-//            //대문자인 경우
-//            out.println "@Table(name = \"$fileName\", schema=\"$tableSchema\")"
-//        }else{
-//            //소문자인 경우
-//            out.println "@Table(name = \"$tableName\")"
-//        }
-        out.println "@Table(name = \"\\\"$tableName\\\"\", schema=\"$tableSchema\")"
+        out.println "@Table(name = \"\\\"$tableName\\\"\", schema=\"\\\"$tableSchema\\\"\")"
     }else{
         out.println "@Table(name = \"$tableName\")"
-    }
-    if(fieldsInfo.primaryKey.size() > 1){
-        out.println "@DefaultSort(columnName = { ${defaultSort.sortColumnName} }, dir = ${defaultSort.sortDir})"
-    }else if(fieldsInfo.primaryKey.size() == 1){
-        out.println "@DefaultSort(columnName = \"${defaultSort.sortColumnName}\", dir = SortOrder.DESC)"
-    }else{
-        out.println "//@DefaultSort(columnName = \"@@@입력필요@@@\", dir = SortOrder.DESC)"
     }
     out.println "public class $fileName implements Serializable {"
     out.println ""
@@ -285,9 +211,6 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
             out.println "    /* ${it.comment} */"
         }
         if (it.pk) {    //pk이면 @Id 추가
-            if(it.type == 'LocalDate' || it.type == 'LocalDateTime'){   //키 컬럼타입이 날짜타입
-                out.println "    @SaveLocalDateTime"
-            }
             out.println "    @Id"
         }
         if(isCreationTimeColumn(it.name)){  //@CreationTimestamp 붙여줘야 하는 컬럼인지 확인 후 어노테이션 추가
@@ -313,84 +236,19 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
                 out.println "    @Column(name = \"${it.oriName}\")"
             }
         }
-        out.println "    @SearchField(columnName = \"${it.name}\")"
-//        if(TYPE_MAPPING_RULE == 2){ //타입 매핑 룰이 포맷 컨버터 사용
-//            def converter = getConverter(it.type)   //컨버터 사용 필요한 타입인지 확인 후 어노테이션 추가
-//            if(converter != ''){
-//                out.println "    @Convert(converter = ${converter}.class)"
-//            }
-//        }
         out.println "    private ${it.type} ${it.name};"
         out.println ""
     }
     out.println "}"
 }
 
-//Entity 생성 설정
+//Entity 생성 설정(key가 여러개인 경우)
 def generateEntity2(out, fileName, tableName, tableSchema, tableComment, fields, fieldsInfo, dir) {
     //패키지명
     def packageName = setPackageNm(dir)
 
-    //defaultSort 세팅
-    def defaultSort = getDefaultSort(fieldsInfo.primaryKey)
-
-    def strPk = ""
-    def strField = ""
-
-    //필드 세팅
-    fields.each() {
-        if (it.pk) {    //pk이면 key의 SearchField 부분에 추가되야함.
-            if(strPk != ""){
-                strPk += ", "
-            }
-            strPk += "\"key.${it.name}\""
-        } else{
-            if (it.comment != "" && it.comment != null) {   //컬럼 코멘트 있으면 코멘트관련 주석 추가
-                strField += "    /* ${it.comment} */\n"
-            }
-            if(isCreationTimeColumn(it.name)){  //@CreationTimestamp 붙여줘야 하는 컬럼인지 확인 후 어노테이션 추가
-                if(DB_INFO == 2){
-                    strField += "    @Column(name = \"\\\"${it.oriName}\\\"\", updatable = false)\n"
-                    strField +=  "    @CreationTimestamp\n"
-                }else{
-                    strField += "    @Column(name = \"${it.oriName}\", updatable = false)\n"
-                    strField +=  "    @CreationTimestamp\n"
-                }
-            } else if(isUpdateTimeColumn(it.name)){  //@UpdateTimestamp 붙여줘야 하는 컬럼인지 확인 후 어노테이션 추가
-                if(DB_INFO == 2){
-                    strField += "    @Column(name = \"\\\"${it.oriName}\\\"\")\n"
-                    strField +=  "    @UpdateTimestamp\n"
-                }else{
-                    strField += "    @Column(name = \"${it.oriName}\")\n"
-                    strField +=  "    @UpdateTimestamp\n"
-                }
-            } else{
-                if(DB_INFO == 2){
-                    strField += "    @Column(name = \"\\\"${it.oriName}\\\"\")\n"
-                }else{
-                    strField += "    @Column(name = \"${it.oriName}\")\n"
-                }
-            }
-            strField += "    @SearchField(columnName = \"${it.name}\")\n"
-//            if(TYPE_MAPPING_RULE == 2){ //타입 매핑 룰이 포맷 컨버터 사용
-//                def converter = getConverter(it.type)   //컨버터 사용 필요한 타입인지 확인 후 어노테이션 추가
-//                if(converter != ''){
-//                    strField += "    @Convert(converter = ${converter}.class)\n"
-//                }
-//            }
-            strField += "    private ${it.type} ${it.name};\n"
-            strField += "\n"
-        }
-    }
-
     out.println "package $packageName;"
-    if(NEW_FILE_HANDLE_TYPE == 2){
-        out.println "${NEW_FILE_DIV}"
-    }
     out.println ""
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.DefaultSort;"
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.SearchField;"
-    out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.enumClass.SortOrder;"
     out.println "import ${packageName}.key.${fileName}_KEY;"
     out.println "import lombok.Getter;"
     out.println "import lombok.Setter;"
@@ -419,11 +277,6 @@ def generateEntity2(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println "import java.time.LocalDateTime;"
     }
     out.println ""
-//    if(fieldsInfo.importConverter){
-//        out.println "import javax.persistence.Convert;"
-//        out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.converter.*;"
-//    }
-    out.println ""
     out.println "/**"
     if (tableComment != null) { //테이블 코멘트가 있으면 해당 코멘트로 주석 채워줌
         out.println " * [${tableComment}] Entity<br />"
@@ -431,7 +284,7 @@ def generateEntity2(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println " * [] Entity<br />"
     }
     out.println " *"
-    out.println " * @author ByungMin"
+    out.println " * @author "
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
@@ -440,38 +293,47 @@ def generateEntity2(out, fileName, tableName, tableSchema, tableComment, fields,
     out.println "@Setter"
     out.println "@Entity"
     if(DB_INFO == 2){
-        //DB가 PostgreSQL
-//        if(Character.isUpperCase(tableName.charAt(0))){
-//            //대문자인 경우
-//            out.println "@Table(name = \"\\\"$fileName\\\"\", schema=\"$tableSchema\")"
-//        }else{
-//            //소문자인 경우
-//            out.println "@Table(name = \"$tableName\")"
-//        }
-        out.println "@Table(name = \"\\\"$tableName\\\"\", schema=\"$tableSchema\")"
+        out.println "@Table(name = \"\\\"$tableName\\\"\", schema=\"\\\"$tableSchema\\\"\")"
     }else{
         out.println "@Table(name = \"$tableName\")"
-    }
-    if(fieldsInfo.primaryKey.size() > 1){
-        out.println "@DefaultSort(columnName = { ${defaultSort.sortColumnName} }, dir = ${defaultSort.sortDir})"
-    }else if(fieldsInfo.primaryKey.size() == 1){
-        out.println "@DefaultSort(columnName = \"${defaultSort.sortColumnName}\", dir = SortOrder.DESC)"
-    }else{
-        out.println "//@DefaultSort(columnName = \"@@@입력필요@@@\", dir = SortOrder.DESC)"
     }
     out.println "public class $fileName implements Serializable {"
     out.println ""
     out.println "    /* 키 */"
     out.println "    @EmbeddedId"
-    if(fieldsInfo.primaryKey.size() == 0){    //키, 인덱스 모두 없는 경우 주석 처리
-        out.println "    //@SearchField(columnName = { \"@@@입력필요@@@\" })"
-    } else{
-        out.println "    @SearchField(columnName = { ${strPk} })"
-    }
     out.println "    private ${fileName}_KEY key;"
     out.println ""
-    out.println ""
-    out.println strField
+    //필드 세팅
+    fields.each() {
+        if (it.comment != "" && it.comment != null) {   //컬럼 코멘트 있으면 코멘트관련 주석 추가
+            out.println "    /* ${it.comment} */"
+        }
+        if(isCreationTimeColumn(it.name)){  //@CreationTimestamp 붙여줘야 하는 컬럼인지 확인 후 어노테이션 추가
+            if(DB_INFO == 2){
+                out.println "    @Column(name = \"\\\"${it.oriName}\\\"\", updatable = false)"
+                out.println "    @CreationTimestamp"
+            }else{
+                out.println "    @Column(name = \"${it.oriName}\", updatable = false)"
+                out.println "    @CreationTimestamp"
+            }
+        } else if(isUpdateTimeColumn(it.name)){  //@UpdateTimestamp 붙여줘야 하는 컬럼인지 확인 후 어노테이션 추가
+            if(DB_INFO == 2){
+                out.println "    @Column(name = \"\\\"${it.oriName}\\\"\")"
+                out.println "    @UpdateTimestamp"
+            }else{
+                out.println "    @Column(name = \"${it.oriName}\")"
+                out.println "    @UpdateTimestamp"
+            }
+        } else{
+            if(DB_INFO == 2){
+                out.println "    @Column(name = \"\\\"${it.oriName}\\\"\")"
+            }else{
+                out.println "    @Column(name = \"${it.oriName}\")"
+            }
+        }
+        out.println "    private ${it.type} ${it.name};"
+        out.println ""
+    }
     out.println "}"
 }
 
@@ -480,13 +342,7 @@ def generateEntityKey(out, fileName, tableName, tableSchema, tableComment, field
     def packageName = setPackageNm(dir)
 
     out.println "package $packageName;"
-    if(NEW_FILE_HANDLE_TYPE == 2){
-        out.println "${NEW_FILE_DIV}"
-    }
     out.println ""
-    if(fieldsInfo.importSaveLocalDateTime){  //날짜타입이면 @SaveLocalDateTime 추가
-        out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.annotation.SaveLocalDateTime;"
-    }
     out.println "import lombok.Getter;"
     out.println "import lombok.Setter;"
     out.println "import lombok.AllArgsConstructor;"
@@ -509,11 +365,6 @@ def generateEntityKey(out, fileName, tableName, tableSchema, tableComment, field
         out.println "import java.time.LocalDateTime;"
     }
     out.println ""
-//    if(fieldsInfo.importConverter){
-//        out.println "import javax.persistence.Convert;"
-//        out.println "import kr.co.neighbor21.${PROJECT_NAME}.common.jpa.converter.*;"
-//    }
-    out.println ""
     out.println "/**"
     if (tableComment != null) { //테이블 코멘트가 있으면 해당 코멘트로 주석 채워줌
         out.println " * [${tableComment}] Entity Key<br />"
@@ -521,7 +372,7 @@ def generateEntityKey(out, fileName, tableName, tableSchema, tableComment, field
         out.println " * [] Entity Key<br />"
     }
     out.println " *"
-    out.println " * @author ByungMin"
+    out.println " * @author "
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
@@ -543,20 +394,11 @@ def generateEntityKey(out, fileName, tableName, tableSchema, tableComment, field
                 if (it.comment != "" && it.comment != null) {   //컬럼 코멘트 있으면 코멘트관련 주석 추가
                     out.println "    /* ${it.comment} */"
                 }
-                if(it.type == 'LocalDate' || it.type == 'LocalDateTime'){   //키 컬럼타입이 날짜타입
-                    out.println "    @SaveLocalDateTime"
-                }
                 if(DB_INFO == 2){
                     out.println "    @Column(name = \"\\\"${it.oriName}\\\"\")"
                 }else{
                     out.println "    @Column(name = \"${it.oriName}\")"
                 }
-//                if(TYPE_MAPPING_RULE == 2){ //타입 매핑 룰이 포맷 컨버터 사용
-//                    def converter = getConverter(it.type)   //컨버터 사용 필요한 타입인지 확인 후 어노테이션 추가
-//                    if(converter != ''){
-//                        out.println "    @Convert(converter = ${converter}.class)"
-//                    }
-//                }
                 out.println "    private ${it.type} ${it.name};"
                 out.println ""
             }
@@ -629,7 +471,6 @@ def getFieldsInfo(fields) {
             primaryKey : [],
             importLocalDate : false,
             importLocalDateTime : false,
-            importSaveLocalDateTime : false,
             importCreationTimestamp : false,
             importUpdateTimestamp : false,
             importBlob : false,
