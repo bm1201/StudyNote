@@ -24,10 +24,11 @@ import java.time.LocalDateTime
  * 1. PROJECT_SETTING 정보 확인
  * 2. @CreationTimestamp 붙여줄 컬럼명 정보 확인
  * 3. @UpdateTimestamp 붙여줄 컬럼명 정보 확인
- * 4. db 정보 확인 - 개발하려는 db 정보에 맞게 수정
- * 5. 타입 포맷 매핑 처리 정보 확인 - 타입 포맷 매핑 처리 방법에 맞게 수정
- * 6. 프로젝트 정보 확인 - 적용할 프로젝트명으로 수정 (파일 import 자동 작성할 때 사용)
- * 7. 엔티티 키 규칙 타입 확인 - 엔티티 키 규칙에 맞게 수정
+ * 4. 작업 권한자 정보 확인
+ * 5. db 정보 확인 - 개발하려는 db 정보에 맞게 수정
+ * 6. 타입 포맷 매핑 처리 정보 확인 - 타입 포맷 매핑 처리 방법에 맞게 수정
+ * 7. 프로젝트 정보 확인 - 적용할 프로젝트명으로 수정 (파일 import 자동 작성할 때 사용)
+ * 8. 엔티티 키 규칙 타입 확인 - 엔티티 키 규칙에 맞게 수정
  */
 
 
@@ -51,8 +52,10 @@ CREATION_ANNOTAION_COLUMN = ["regDt, regDtm", "cretDt", "cretDtm"]
 //@UpdateTimestamp 붙여줄 컬럼명 지정
 UPDATE_ANNOTAION_COLUMN = ["updDt", "updDtm", "altrDt", "altrDtm"]
 
-/*********************************/
+//권한자
+AUTHOR = "ByungMin"
 
+/*********************************/
 
 //프로젝트 정보 (프로젝트 명)
 PROJECT_NAME = PROJECT_SETTING['projectName']
@@ -187,7 +190,7 @@ def generateEntity1(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println " * [] Entity<br />"
     }
     out.println " *"
-    out.println " * @author "
+    out.println " * @author ${AUTHOR}"
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
@@ -284,7 +287,7 @@ def generateEntity2(out, fileName, tableName, tableSchema, tableComment, fields,
         out.println " * [] Entity<br />"
     }
     out.println " *"
-    out.println " * @author "
+    out.println " * @author ${AUTHOR}"
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
@@ -372,7 +375,7 @@ def generateEntityKey(out, fileName, tableName, tableSchema, tableComment, field
         out.println " * [] Entity Key<br />"
     }
     out.println " *"
-    out.println " * @author "
+    out.println " * @author ${AUTHOR} "
     out.println " * @since ${FORMATTEDDATE}<br />"
     out.println " * @apiNote <br />"
     out.println " */"
